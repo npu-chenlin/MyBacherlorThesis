@@ -1,0 +1,17 @@
+test
+*.log
+*.ilg
+*.out
+*.aux
+*.toc
+*.ps
+*.pdf
+*.lot
+*.lof
+*.ind
+*.glo
+*.dvi
+*.dbdj
+*.blg
+*.bbl
+
