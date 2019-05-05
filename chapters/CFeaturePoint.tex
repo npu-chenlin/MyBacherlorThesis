@@ -7,7 +7,7 @@
 角点往往是两条边缘的交点，它是两条边缘方向变换的一种表示，因此其两个方向的梯度变换通常都比较大并且容易检测到。这里我们理解一下角点检测的算法。\par
 \subsubsection{角点检测基本原理：}\par
 人们通常通过在一个小的窗口区域内观察点的灰度值大小来识别角点，如果往任何方向移动窗口都会引起比较大的灰度变换那么往往这就是我们要找的角点。如下图:\par
-\begin{figure}
+\begin{figure}[htbp]
 \centering
 \includegraphics[height=5cm]{figures/Harris1.png}
 \caption{角点的选择}
@@ -20,7 +20,7 @@
 E(u,v)=\sum_{x}\sum_{y} w(x,y)[I(x+u,y+v)-I(x,y)]^{2}\label{Harris}
 \end{equation}\par
 式中$E(u,v)$即为角点响应函数，事实上被叫做窗口响应函数可能更合适，因为实际上$E(u,v)$计算的是一个5\times5或者7\times7的窗口。$x,y$为要计算的像素点。$I(x,y)$为该点的灰度值。$w(x,y)$为窗函数，可以理解为每个像素点的加权系数。
-\begin{figure}
+\begin{figure}[htbp]
 	\centering
 	\includegraphics[height=3cm]{figures/Harris2.png}
 	\caption{窗口函数}
@@ -53,7 +53,7 @@ M=\sum_{x, y} w(x, y) \left( \begin{array}{cc}{I_{x}^{2}} & {I_{x} I_{y}} \\ {I_
 	E(u,v) \approx Au^{2}+2Cuv+Bv^{2}
 \end{equation}
 由公式\ref{Harris}可以看到，这样的函数在三维空间上起码是非负定的，如图\ref{ercixing}所示：
-\begin{figure}
+\begin{figure}[htbp]
 \includegraphics[height=5cm]{figures/ercixing.png}
 \includegraphics[height=5cm]{figures/ercixing1.png}
 \caption{$E(u,v)$图像}
@@ -73,7 +73,7 @@ M=\sum_{x, y} w(x, y) \left( \begin{array}{cc}{I_{x}^{2}} & {I_{x} I_{y}} \\ {I_
 \end{equation}
 因此，算法并不直接计算特征值，而是通过矩阵的行列式和迹来测量角点，从而大大提高了计算效率。\par
 算法在计算完图像中的角点之后，图像上某些区域可能会出现角点十分密集的情况，这时候就要进行\textbf{非最大值抑制(Non-maximal Suppression)}。也就是说只保留局部区域中响应最大的特征点，从而避免匹配的时候重复检测。\par
-\begin{figure}
+\begin{figure}[htbp]
 	\includegraphics[height=5cm]{figures/LoG1.png}
 	\includegraphics[height=5cm]{figures/LoG2.png}
 	\caption{Harris角点不具有尺度不变性}
@@ -140,7 +140,7 @@ L o G \triangleq& \triangle G_{\sigma}(x, y)=\frac{\partial^{2}}{\partial x^{2}}
 \end{aligned}
 \end{equation}\par
 画出LoG算子的空间形状：
-\begin{figure}
+\begin{figure}[H]
 	\centering
 	\begin{subfigure}[ht]{0.3\textwidth}
 		\centering
@@ -155,15 +155,37 @@ L o G \triangleq& \triangle G_{\sigma}(x, y)=\frac{\partial^{2}}{\partial x^{2}}
 	\end{subfigure}
 \caption{LoG算子空间表示}
 \end{figure}
-\begin{figure}
+\begin{figure}[htbp]
 \centering
-\includegraphics[height=4cm]{figures/LoG.png}
+\includegraphics[height=3.5cm]{figures/LoG.png}
 \caption{左:LoG算子\qquad \qquad \qquad \qquad 右:Laplace算子}
 \end{figure}\par
 可以看到，LoG算子显著减小了噪点对检测的影响。
 \subsubsection{尺度空间}
-
-
+为了解决一般角点不具有尺度不变性的问题，我们在此引入尺度空间：
+\begin{equation}
+L\left(x, y, \sigma_{D}\right)=I(x, y) * G\left(x, y, \sigma_{D}\right), \quad \sigma_{D} \in\left\{\sigma_{0}, \quad k \sigma_{0}, \quad k^{2} \sigma_{0}, \quad \dots\right\}
+\end{equation}
+尺度空间下的LoG算子:
+\begin{equation}
+\begin{aligned}
+\nabla^{2} \mathrm{L}\left(x, y, \sigma_{\mathrm{D}}\right)=&\left(\frac{\partial^{2} \mathrm{L}\left(x, y, \sigma_{\mathrm{D}}\right)}{\partial x^{2}}+\frac{\partial^{2} \mathrm{L}\left(x, y, \sigma_{\mathrm{D}}\right)}{\partial y^{2}}\right)\\
+=&\underbrace{\left(\frac{\partial^{2} \mathrm{G}\left(x, y, \sigma_{\mathrm{D}}\right)}{\partial x^{2}}+\frac{\partial^{2} \mathrm{G}\left(x, y, \sigma_{\mathrm{D}}\right)}{\partial y^{2}}\right)}_\text{多尺度LoG算子}*I(x,y)
+\end{aligned}
+\end{equation}
+从公式可以看出，所谓尺度空间，就是用不同大小的高斯滤波核来对图像进行处理。如图\ref{differentkernalsize}所示:
+\begin{figure}[H]
+	\centering
+	\includegraphics[height=3cm]{differentkernalsize.png}
+	\caption{不同的高斯滤波核大小，从左至右依次是3$\times$3,11$\times$11,21$\times$21,25$\times$25}\label{differentkernalsize}
+\end{figure}\par
+可以看到滤波核越大，图像就越模糊。这实际上也是在模拟人类的视觉，因为距离越远，人看上去也越模糊。因此我们可以用不同滤波核来模拟不同的尺度。\par
+但是这种多尺度的LoG算子有一个问题，不同尺度的LoG算子计算出来的响应值不具有可比性，因此我们需要对LoG算子进行归一化操作，才能够在不同尺度之间比较LoG算子的响应值，具体的做法就是将LoG算子乘上一个尺度:
+\begin{equation}
+\nabla_{\text { norm }}^{2} \mathrm{L}\left(x, y, \sigma_{\mathrm{D}}\right)= 
+\underbrace{\sigma_{\mathrm{D}}^{2}\left(\frac{\partial^{2} \mathrm{G}\left(x, y, \sigma_{\mathrm{D}}\right)}{\partial x^{2}}+\frac{\partial^{2} \mathrm{G}\left(x, y, \sigma_{\mathrm{D}}\right)}{\partial y^{2}}\right)}_\text{尺度归一化LoG算子} * I(x, y)
+\end{equation}
+那么寻找特征点的过程，就可以转化为求解$| \nabla_{\text { nomm }}^{2} \mathbf{L}\left(x, y, \sigma_{\mathrm{D}}\right) |$的最大值的过程。
 
 
 

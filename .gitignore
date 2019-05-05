@@ -5,7 +5,6 @@ test
 *.aux
 *.toc
 *.ps
-*.pdf
 *.lot
 *.lof
 *.ind
