@@ -185,16 +185,57 @@ L\left(x, y, \sigma_{D}\right)=I(x, y) * G\left(x, y, \sigma_{D}\right), \quad \
 \nabla_{\text { norm }}^{2} \mathrm{L}\left(x, y, \sigma_{\mathrm{D}}\right)= 
 \underbrace{\sigma_{\mathrm{D}}^{2}\left(\frac{\partial^{2} \mathrm{G}\left(x, y, \sigma_{\mathrm{D}}\right)}{\partial x^{2}}+\frac{\partial^{2} \mathrm{G}\left(x, y, \sigma_{\mathrm{D}}\right)}{\partial y^{2}}\right)}_\text{尺度归一化LoG算子} * I(x, y)
 \end{equation}
-那么寻找特征点的过程，就可以转化为求解$| \nabla_{\text { nomm }}^{2} \mathbf{L}\left(x, y, \sigma_{\mathrm{D}}\right) |$的最大值的过程。
-
-
-
-
-
-
-
-
-
-
+那么寻找特征点的过程，就可以转化为求解$| \nabla_{\text { nomm }}^{2} \mathbf{L}\left(x, y, \sigma_{\mathrm{D}}\right) |$最值的过程。
 \subsection{基于DoG的多尺度特征检测子}
+Difference of Gaussian(DoG)是高斯函数的差分。字面意思理解，首先将图像与两个方差不同的高斯函数进行卷积得到两幅滤波结果，然后再将图像相减，得到DoG的响应值图像。
+\begin{equation}
+\begin{aligned} g_{1}(x, y) &=G_{\sigma_{1}}(x, y) * f(x, y) \\ g_{2}(x, y) &=G_{\sigma_{2}}(x, y) * f(x, y) \end{aligned}
+\end{equation}
+则DoG表示为：
+\begin{equation}
+D o G \triangleq G_{\sigma_{1}}-G_{\sigma_{2}}=\frac{1}{\sqrt{2 \pi}}\left(\frac{1}{\sigma_{1}} e^{-\left(x^{2}+y^{2}\right) / 2 \sigma_{1}^{2}}-\frac{1}{\sigma_{2}} e^{-\left(x^{2}+y^{2}\right) / 2 \sigma_{2}^{2}}\right)
+\end{equation}
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[ht]{0.3\textwidth}
+		\centering
+		\includegraphics[height=0.7\textwidth]{figures/DoG1.png}
+		\subcaption{$\sigma_1=$0.3,$\sigma_2=$0.4}
+	\end{subfigure}
+	\begin{subfigure}[ht]{0.3\textwidth}
+		\centering
+		\includegraphics[height=0.7\textwidth]{figures/DoG2.png}
+		\subcaption{$\sigma_1=$0.6,$\sigma_2=$0.7}
+	\end{subfigure}
+	\begin{subfigure}[ht]{0.3\textwidth}
+	\centering
+	\includegraphics[height=0.7\textwidth]{figures/DoG3.png}
+	\subcaption{$\sigma_1=$0.7,$\sigma_2=$0.8}
+	\end{subfigure}
+	\caption{不同高斯滤波函数相减}\label{differentsigma}
+\end{figure}
+根据理论，三维图中的最大值和最小值点是角点。在使用DoG求角点的时候，则采用多幅图像差分:\par
+\begin{figure}[H]
+	\centering
+	\includegraphics[height=5cm]{DoG.png}
+	\caption{多尺度DoG}
+\end{figure}\par
+标记红色当前像素点，黄色的圈标记邻接像素点，用这个方式，最多检测相邻尺度的26个像素点。如果它是所有邻接像素点的最大值或最小值点，则标记红色被标记为特征点，如此依次进行，则可以完成图像的特征点提取。
+因此根据图\ref{differentsigma}，遍历图中每一个像素点，可以得到:
+\begin{figure}
+	\centering
+	\includegraphics[height=5cm]{DoG4}
+	\caption{黑色为极小值，白色为极大值}
+\end{figure}
+在原始图像上显示的DoG角点检测结果，如下图所示：
+\begin{figure}
+	\centering
+	\includegraphics[height=5cm]{DoG5}
+	\caption{DoG角点}
+\end{figure}
+
+
+
+
+
 \subsection{快速特征点检测方法}
