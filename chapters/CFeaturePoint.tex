@@ -185,9 +185,9 @@ L\left(x, y, \sigma_{D}\right)=I(x, y) * G\left(x, y, \sigma_{D}\right), \quad \
 \nabla_{\text { norm }}^{2} \mathrm{L}\left(x, y, \sigma_{\mathrm{D}}\right)= 
 \underbrace{\sigma_{\mathrm{D}}^{2}\left(\frac{\partial^{2} \mathrm{G}\left(x, y, \sigma_{\mathrm{D}}\right)}{\partial x^{2}}+\frac{\partial^{2} \mathrm{G}\left(x, y, \sigma_{\mathrm{D}}\right)}{\partial y^{2}}\right)}_\text{尺度归一化LoG算子} * I(x, y)
 \end{equation}
-那么寻找特征点的过程，就可以转化为求解$| \nabla_{\text { nomm }}^{2} \mathbf{L}\left(x, y, \sigma_{\mathrm{D}}\right) |$最值的过程。
-\subsection{基于DoG的多尺度特征检测子}
-Difference of Gaussian(DoG)是高斯函数的差分。字面意思理解，首先将图像与两个方差不同的高斯函数进行卷积得到两幅滤波结果，然后再将图像相减，得到DoG的响应值图像。
+那么寻找特征点的过程，就可以转化为求解$| \nabla_{\text { nomm }}^{2} \mathbf{L}\left(x, y, \sigma_{\mathrm{D}}\right) |$最值的过程。\par
+\subsection{基于DoG的多尺度特征检测子(sift}
+实际上这种基于LoG算子检测特征点的方法效果是很好的，但是它十分耗费计算资源。计算速度不快。于是Lowe\cite{lowe2004sift}提出相邻尺度的高斯差分(DoG)来近似LoG算法，也就是所谓的sift特征点。Difference of Gaussian(DoG)是高斯函数的差分。字面意思理解，首先将图像与两个方差不同的高斯函数进行卷积得到两幅滤波结果，然后再将图像相减，得到DoG的响应值图像。
 \begin{equation}
 \begin{aligned} g_{1}(x, y) &=G_{\sigma_{1}}(x, y) * f(x, y) \\ g_{2}(x, y) &=G_{\sigma_{2}}(x, y) * f(x, y) \end{aligned}
 \end{equation}
@@ -222,20 +222,51 @@ D o G \triangleq G_{\sigma_{1}}-G_{\sigma_{2}}=\frac{1}{\sqrt{2 \pi}}\left(\frac
 \end{figure}\par
 标记红色当前像素点，黄色的圈标记邻接像素点，用这个方式，最多检测相邻尺度的26个像素点。如果它是所有邻接像素点的最大值或最小值点，则标记红色被标记为特征点，如此依次进行，则可以完成图像的特征点提取。
 因此根据图\ref{differentsigma}，遍历图中每一个像素点，可以得到:
-\begin{figure}
+\begin{figure}[H]
 	\centering
 	\includegraphics[height=5cm]{DoG4}
 	\caption{黑色为极小值，白色为极大值}
-\end{figure}
-在原始图像上显示的DoG角点检测结果，如下图所示：
+\end{figure}\par
+最后为了避免重复检测要进行非极大值抑制，把相邻的特征点进行删除，仅保留局部最大值。在原始图像上显示的DoG角点检测结果，如下图所示：
 \begin{figure}
 	\centering
 	\includegraphics[height=5cm]{DoG5}
 	\caption{DoG角点}
 \end{figure}
-
-
-
-
-
 \subsection{快速特征点检测方法}
+\subsubsection{FAST特征点}
+FAST特征点(Feature from Accelerate Segment Test)\cite{rosten2005fusing}是一种十分快速的特征点检测方法，速度是DoG的100倍。FAST特征点的检测方法很简单，就是检测局部像素灰度值变化来确认特征点的位置。\par
+\begin{figure}[H]
+	\centering
+	\includegraphics[height=5cm]{FAST}
+	\caption{FAST检测原理}
+\end{figure}
+当有n个像素灰度值明显大于或者小于候选点的时候，该点被认为是特征点。\par
+根据n的取值，这些特征点被叫做FAST-n特征点，n一般取9-12。
+\subsubsection{ORB特征点}
+ORB特征点(Oriented FAST)，是用来弥补FAST特征点不具有尺度变性和旋转不变性而设计出来的特征点。事实上ORB特征点也是现阶段SLAM最经常使用的特征点。为了解决尺度不变性，我们可以构造多尺度的图像，在每一层上都进行检测。而对于旋转不变性，我们将在下一节从特征点描述子入手来解决旋转不变性的问题。
+\section{特征描述子}
+\subsection{描述子的要求}
+上一节说明了如何去提取特征点，但是在图像处理过程中提取特征点之后还需要对特征点进行描述。特征描述子就好像是特征点的ID一样。即便在两幅图像中，如果两个特征点的描述子很接近，我们就有一定的把握说这两个特征点是现实空间中的同一个点。这就对描述子有以下几个要求:
+\begin{itemize}
+	\item 同一个空间点在不同视角的特征点具有高度相似的描述子
+	\item 不同的描述子之间差异性应该尽量的大
+	\item 描述子需要是一个具有固定长度的向量
+	\item 一定的鲁棒性，在不同光照，不同角度下描述子应该相似
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
