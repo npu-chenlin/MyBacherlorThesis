@@ -254,8 +254,78 @@ ORB特征点(Oriented FAST)，是用来弥补FAST特征点不具有尺度变性�
 	\item 描述子需要是一个具有固定长度的向量
 	\item 一定的鲁棒性，在不同光照，不同角度下描述子应该相似
 \end{itemize}
-
-
+\subsection{支撑区域与主方向}
+某个特征点的描述子计算需要有一个支撑区域,描述子就是根据这个支持区域来计算的。支持区域可以是正方形的，也可以是长方形的。对于较大的图片我们可以采用较大的支持区域，反之亦然。不同大小的支持区域实际上也反映了一个尺度的变化。\par
+常见的例如BRIEF是一种二进制描述子,其描述向量由许多0和1组成,这里的0和1编码了关键点附近两个像素的大小关系。如果我们取了256组点,最后就得到了256维由0、1组成的向量。BRIEF是随机选点的,速度非常快,而且由于使用了二进制表达,存储也十分的方便。但是这样的描述子是不具有旋转不变性的，事实上，由于其极快的速度，目前许多SLAM系统中采用的就是添加了角度信息的BRIEF描述子。我们在计算描述子的同时，还通过特征点获得到了它的主方向，大概理解就是支撑区域中每个像素的梯度方向的一个加权和。主方向描述了支撑区域中大多数点的一个梯度方向。因此在计算描述子的时候，我们可以先将主方向旋转到水平方向，然后再进行计算，这样我们计算到的描述子就具有了旋转不变性。
+\begin{figure}[H]
+	\centering
+	\includegraphics[height=5cm]{zhichiquyu}
+	\caption{描述子支撑区域及主方向}
+\end{figure}
+\subsection{光度一致性}
+为了让描述子在不同的光照条件下都有较好的表现，我们通过将图像像素值进行归一化处理，去除光度变化。
+\begin{equation}
+I^{\prime}=\frac{I-u}{s}
+\end{equation}\par
+为了解决尺度不变性，我们引入了支撑区域；为了解决旋转不变性，我们将图像主方向旋转至水平；为了解决光照一致性，我们将图像归一化。经过这几个步骤，我们就能过获得一个良好的描述子了。表\ref{descriptors}列出了几种常见的描述子。
+\begin{table}[htbp]
+	\caption{常见描述子}
+	\label{descriptors}
+	\begin{tabular}{p{0.16\textwidth}<{\centering} p{0.28\textwidth}<{\centering} p{0.28\textwidth}<{\centering} p{0.28\textwidth}<{\centering}}
+		\toprule
+		\multicolumn{1}{c}{} & SIFT                                         & SURF                                              & BRIEF                                                \\ \midrule
+		确定主方向                & 支撑区域梯度直方图最值方向                                & 支撑区域对Haar算子响应最大方向                                 & 无                                                    \\ \midrule
+		确定尺度                 & 建立尺度空间，尺度空间中DoG最值所在的尺度即为特征尺度                 & 尺度空间中Hessian矩阵行列式最值所在的尺度即为特征尺度                    & 无                                                    \\ \midrule
+		描述方法                 & 取一正方形支撑区域，分为4×4个子区域，每个区域用8方向的梯度表示每个子区域，共128维 & 同样取4×4个子区域，分别在x，y方向计算Haar算子响应值之和和绝对值之和，4个值描述，共64维 & 在特征点周围随机抽取点对并灰度值大小，根据结果记作0或1，取256组组成256位的二进制串 \\ \bottomrule
+	\end{tabular}
+\end{table}
+\section{特征点匹配}
+考虑这样一个问题:对于一个场景，我们在两个不同的角度进行拍摄得到两张照片。对这两张照片提取特征点之后如何去判断哪两个特征点描述的是空间中的同一个点呢？这就引出了特征点匹配问题。前面说了，特征点的描述子就像特征点的ID一样，我们希望不管这个点在什么条件下，总是能被人们检测出这就是那个点。我们可以这样认为：一个设计良好的描述子，它在不同视角下的距离应该是差不多的。\par
+\begin{figure}[H]
+	\centering
+	\includegraphics[height=5cm]{tezhengdianjuli}
+	\caption{特征点A和B的描述子}
+\end{figure}
+我们有很多种方法可以度量两个描述子是否接近:
+\begin{table}[htb]
+	\centering
+	\caption{度量距离的几种方法}
+	\begin{tabular}{ll}
+		\toprule
+		距离 & 公式\\
+		\midrule
+		欧式距离 & $D_{e u c}(\boldsymbol{a}, \boldsymbol{b})=\|\boldsymbol{a}-\boldsymbol{b}\|_{2}=\left(\sum_{i=1}^{n}\left(a_{i}-b_{i}\right)^{2}\right)^{\frac{1}{2}}$ \\
+		马氏距离 & $D_{\text {mahal}}(\boldsymbol{a}, \boldsymbol{b})=\left((\boldsymbol{a}-\boldsymbol{b})^{T} \Sigma^{-1}(\boldsymbol{a}-\boldsymbol{b})\right)^{\frac{1}{2}}$   \\
+		归一化互相关 & $N C C(\boldsymbol{a}, \boldsymbol{b})=\sum_{i=1}^{n} \frac{1}{s_{a} s_{b}}\left(a_{i}-u_{a}\right)\left(b_{i}-u_{b}\right)$       \\
+		汉明距离 & $D_{h a m}(\boldsymbol{a}, \boldsymbol{b})=\sum_{i=1}^{n} a_{i} \oplus b_{i}$\\
+		\bottomrule	
+	\end{tabular}
+  \note{注：$a_{i} \oplus b_{i}$即两者相同时为1，不同为0}
+\end{table}
+\subsection{匹配策略}
+特征的匹配是针对特征描述子的进行的，上面提到特征描述子通常是一个向量，两个特征描述子的之间的距离可以反应出其相似的程度，也就是这两个特征点是不是同一个。根据描述子的不同，可以选择不同的距离度量。如果是浮点类型的描述子，可以使用其欧式距离；对于二进制的描述子（BRIEF）可以使用其汉明距离。\par
+\subsubsection{Lowe’s algorithm}
+有了计算描述子相似度的方法，那么在特征点的集合中如何寻找和其最相似的特征点，这就是特征点的匹配了。最简单直观的方法就是暴力匹配方法(Brute-Force Matcher)，计算某一个特征点描述子与其他所有特征点描述子之间的距离。
+\begin{figure}[H]
+\centering
+\begin{subfigure}[ht]{0.4\textwidth}
+	\centering
+	\includegraphics[height=4cm]{matches}
+	\caption{BFMatcher结果}
+\end{subfigure}
+\quad
+\begin{subfigure}[ht]{0.4\textwidth}
+	\centering
+	\includegraphics[height=4cm]{matches1}
+	\subcaption{Lowe‘s算法过滤}
+	\label{lowe's filter}
+\end{subfigure}
+\caption{匹配过程}\label{differentsigma}
+\end{figure}
+然后将得到的距离进行排序，取距离最近的一个作为匹配点。这种方法简单粗暴，其结果也是显而易见的，通过上面的匹配结果，也可以看出有大量的错误匹配，这就需要使用一些机制来过滤掉错误的匹配。\par
+Lowe's algorithm\cite{muja2009fast}是我们常用的过滤掉错误匹配点的方法。它的原理也很简单，对于一幅图中的特征点，找到另一幅图中和它欧氏距离最近的两个特征点，如果最邻近距离除以次临近距离的值小于某个阈值，则说明最邻近点相比于次临近点足够优秀，就认为这一对点是一组匹配，反之则不是。如图\ref{lowe's filter}所示，可以显然看到经过过滤之后匹配的点已经很准确了。
+\subsubsection{交叉匹配}
+交叉过滤基于这样一个简单的设想:如果特征点A认为B是它的最优匹配，那么相应的，特征点B也应该认为特征点A是它的最优匹配。具体操作的话就是再进行一次匹配，反过来使用被匹配到的点进行匹配，如果匹配到的仍然是第一次匹配的点的话，就认为这是一个正确的匹配。假如第一次特征点A使用暴力匹配的方法匹配到特征点B；反过来，使用特征点B进行匹配，如果匹配到的仍然是特征点A，则就认为这是一个正确的匹配，否则就是一个错误的匹配。
 
 
 
