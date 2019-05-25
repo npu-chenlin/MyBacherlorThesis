@@ -186,7 +186,7 @@ L\left(x, y, \sigma_{D}\right)=I(x, y) * G\left(x, y, \sigma_{D}\right), \quad \
 \underbrace{\sigma_{\mathrm{D}}^{2}\left(\frac{\partial^{2} \mathrm{G}\left(x, y, \sigma_{\mathrm{D}}\right)}{\partial x^{2}}+\frac{\partial^{2} \mathrm{G}\left(x, y, \sigma_{\mathrm{D}}\right)}{\partial y^{2}}\right)}_\text{尺度归一化LoG算子} * I(x, y)
 \end{equation}
 那么寻找特征点的过程，就可以转化为求解$| \nabla_{\text { nomm }}^{2} \mathbf{L}\left(x, y, \sigma_{\mathrm{D}}\right) |$最值的过程。\par
-\subsection{基于DoG的多尺度特征检测子(sift}
+\subsection{基于DoG的多尺度特征检测子(sift)}
 实际上这种基于LoG算子检测特征点的方法效果是很好的，但是它十分耗费计算资源。计算速度不快。于是Lowe\cite{lowe2004sift}提出相邻尺度的高斯差分(DoG)来近似LoG算法，也就是所谓的sift特征点。Difference of Gaussian(DoG)是高斯函数的差分。字面意思理解，首先将图像与两个方差不同的高斯函数进行卷积得到两幅滤波结果，然后再将图像相减，得到DoG的响应值图像。
 \begin{equation}
 \begin{aligned} g_{1}(x, y) &=G_{\sigma_{1}}(x, y) * f(x, y) \\ g_{2}(x, y) &=G_{\sigma_{2}}(x, y) * f(x, y) \end{aligned}
@@ -337,33 +337,41 @@ Lowe's algorithm\cite{muja2009fast}是我们常用的过滤掉错误匹配点的
 		\label{RANSAC filter}
 	\end{subfigure}
 	\caption{匹配过程}
+	\label{filters}
 \end{figure}
 \subsubsection{交叉匹配}
-交叉过滤基于这样一个简单的设想:如果特征点A认为B是它的最优匹配，那么相应的，特征点B也应该认为特征点A是它的最优匹配。具体操作的话就是再进行一次匹配，反过来使用被匹配到的点进行匹配，如果匹配到的仍然是第一次匹配的点的话，就认为这是一个正确的匹配。假如第一次特征点A使用暴力匹配的方法匹配到特征点B；反过来，使用特征点B进行匹配，如果匹配到的仍然是特征点A，则就认为这是一个正确的匹配，否则就是一个错误的匹配。对比图\ref{no filter}和图\ref{crosscheck filter}，虽然不能明显的看出来差别，但是根据测试来看，交叉匹配能够使\ref{no filter}中7966个匹配降低至5091个匹配。
+交叉过滤基于这样一个简单的设想:如果特征点A认为B是它的最优匹配，那么相应的，特征点B也应该认为特征点A是它的最优匹配。具体操作的话就是再进行一次匹配，反过来使用被匹配到的点进行匹配，如果匹配到的仍然是第一次匹配的点的话，就认为这是一个正确的匹配。假如第一次特征点A使用暴力匹配的方法匹配到特征点B；反过来，使用特征点B进行匹配，如果匹配到的仍然是特征点A，则就认为这是一个正确的匹配，否则就是一个错误的匹配。对比图\ref{no filter}和图\ref{crosscheck filter}，虽然不能明显的看出来差别，但是根据定量测试来看，交叉匹配能够使\ref{no filter}中7966个匹配降低至5091个匹配。
 \subsubsection{RANSAC方法}
-RANSAC算法的基本假设是样本中包含正确数据(inliers，可以被模型描述的数据)，也包含异常数据(outliers，偏离正常范围很远、无法适应数学模型的数据)，即数据集中含有噪声。这些异常数据可能是由于错误的测量、错误的假设、错误的计算等产生的。同时RANSAC也假设，给定一组正确的数据，存在可以计算出符合这些数据的模型参数的方法。
-另外还可采用随机采样一致性（RANSAC）来过滤掉错误的匹配，该方法利用匹配点计算两个图像之间单应矩阵，
+RANSAC算法的基本假设是样本中包含正确数据(inliers，可以被模型描述的数据)，也包含异常数据(outliers，偏离正常范围很远、无法适应数学模型的数据)，即数据集中含有噪声。这些异常数据可能是由于错误的测量、错误的假设、错误的计算等产生的。同时RANSAC也假设，给定一组正确的数据，存在可以计算出符合这些数据的模型参数的方法。因此，我们可以利用RANSAC方法去不断估计两张图之间的单应矩阵或者基础矩阵来获得过滤出inliers。
 \begin{algorithm}[htb]
-	\KwIn{input}
-	\small
+	\KwIn{\\
+	data – 所有的匹配\quad
+	model – 单应矩阵\\
+	k – 算法迭代次数\quad
+	t – 投影误差阈值\\
+}
 	\SetAlgoLined
-	\KwData{this text}
-	\KwResult{how to write algorithm with \LaTeX2e }
-	
-	initialization\;
-	\While{not at end of this document}{
-		read current\;
-		\eIf{understand}{
-			go to next section\;
-			current section becomes this one\;
-		}{
-			go back to the beginning of current section\;
+	\KwResult{bestModel – 单应矩阵 \quad inliers – 内点	}
+	\KwData{bestModel $\leftarrow$ NULL \quad bestInliers $\leftarrow$ 0\;}
+
+	\For{iteration$\leftarrow$0 to k}{
+		maybeInliers$\leftarrow$随机抽取四个不共线的点\;
+		maybeModel$\leftarrow$从maybeInliers中计算单应矩阵\;
+		newInliers$\leftarrow$$\emptyset$\;
+		\For{each match $\in$ data}{
+			error$\leftarrow$计算match点对的重投影误差\;
+			\If{error < t}{将该match添加进newInliers}	
+	}
+		\If{newInliers的元素数目 > bestInliers元素数目}{
+			bestInliers$\leftarrow$newInliers+maybeInliers\;
+			bestModel$\leftarrow$maybeModel
 		}
 	}
-	\caption{算法示例1}
-	\label{algo:algorithm2}
+	\caption{RANSAC算法}
+	\label{algo:RANSAC}
 \end{algorithm}
-
+\par
+事实上，根据测试结果来看，选用单应矩阵作为RANSAC的模型并不合适。查阅资料得知单应矩阵假设所有点都位于同一个平面上，显然宿舍这样的场景并不适合单应矩阵。图\ref{RANSAC filter}的结果是通过另外一个矩阵——基础矩阵计算得来的。至于什么是单应矩阵，什么是基础矩阵，会在下一章作介绍。
 
 
 
