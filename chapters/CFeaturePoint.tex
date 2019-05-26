@@ -241,8 +241,7 @@ FAST特征点(Feature from Accelerate Segment Test)\cite{rosten2005fusing}是一
 	\includegraphics[height=5cm]{FAST}
 	\caption{FAST检测原理}
 \end{figure}
-当有n个像素灰度值明显大于或者小于候选点的时候，该点被认为是特征点。\par
-根据n的取值，这些特征点被叫做FAST-n特征点，n一般取9-12。
+当有n个像素灰度值明显大于或者小于候选点的时候，该点被认为是特征点。根据n的取值，这些特征点被叫做FAST-n特征点，n一般取9~12。
 \subsubsection{ORB特征点}
 ORB特征点(Oriented FAST)，是用来弥补FAST特征点不具有尺度变性和旋转不变性而设计出来的特征点。事实上ORB特征点也是现阶段SLAM最经常使用的特征点。为了解决尺度不变性，我们可以构造多尺度的图像，在每一层上都进行检测。而对于旋转不变性，我们将在下一节从特征点描述子入手来解决旋转不变性的问题。
 \section{特征描述子}
@@ -326,7 +325,7 @@ Lowe's algorithm\cite{muja2009fast}是我们常用的过滤掉错误匹配点的
 	\begin{subfigure}[ht]{0.4\textwidth}
 		\centering
 		\includegraphics[height=4cm]{matches2}
-		\caption{交叉过滤结果}
+		\caption{交叉过滤}
 		\label{crosscheck filter}
 	\end{subfigure}
 	\quad
@@ -360,19 +359,19 @@ RANSAC算法的基本假设是样本中包含正确数据(inliers，可以被模
 		newInliers$\leftarrow$$\emptyset$\;
 		\For{each match $\in$ data}{
 			error$\leftarrow$计算match点对的重投影误差\;
-			\If{error < t}{将该match添加进newInliers}	
+			\If{error < t}{将该match添加进newInliers\;}	
 	}
 		\If{newInliers的元素数目 > bestInliers元素数目}{
 			bestInliers$\leftarrow$newInliers+maybeInliers\;
-			bestModel$\leftarrow$maybeModel
+			bestModel$\leftarrow$maybeModel\;
 		}
 	}
 	\caption{RANSAC算法}
 	\label{algo:RANSAC}
 \end{algorithm}
 \par
-事实上，根据测试结果来看，选用单应矩阵作为RANSAC的模型并不合适。查阅资料得知单应矩阵假设所有点都位于同一个平面上，显然宿舍这样的场景并不适合单应矩阵。图\ref{RANSAC filter}的结果是通过另外一个矩阵——基础矩阵计算得来的。至于什么是单应矩阵，什么是基础矩阵，会在下一章作介绍。
-
+事实上，根据测试结果来看，选用单应矩阵作为RANSAC的模型并不合适。查阅资料得知单应矩阵假设所有点都位于同一个平面上，显然宿舍这样的场景并不适用于这样的假设。图\ref{RANSAC filter}的结果是通过另外一个矩阵——基础矩阵计算得来的。至于什么是单应矩阵，什么是基础矩阵，会在下一章作介绍。\par
+总的来说，我们在特征点匹配的时候会采用多种方式结合来优化匹配结果。SLAM是一个注重速度的系统，其大部分时间都用在特征点的提取和匹配中。实时性要求和匹配结果的正确程度似乎是矛盾的，如果要求异常精确的匹配结果，势必会采用多种匹配方式结合来进行优化。事实证明，我们这样的努力是值得的，因为对于SLAM过程来说，特征点匹配结果正确与否，会直接影响到后续定位结果。
 
 
 
