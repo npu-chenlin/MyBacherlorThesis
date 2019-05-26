@@ -38,8 +38,9 @@ d_{2} \left[\boldsymbol{t}\right]_{\times}\boldsymbol{K}_{2}^{-1} \boldsymbol{x}
 \hat{\boldsymbol{x}}_2^T\left[\boldsymbol{t}\right]_{\times}\boldsymbol{R}\hat{\boldsymbol{x}}_1=0
 \end{equation}
 我们称本质矩阵$\boldsymbol{E}=[\boldsymbol{t}]_{\times} \boldsymbol{R}$，基础矩阵$\boldsymbol{F}=\boldsymbol{K}_{2}^{-T} \boldsymbol{E} \boldsymbol{K}_{1}^{-1}$\par
+\section{基础矩阵}
 可以看到，我们之所以要求解本质矩阵或者基础矩阵，是因为它们包含着图像之间的运动信息，只要求得本质矩阵，就能够从中分解除R和t，那么相机的运动信息也就清楚了。想要求解本质矩阵，首先要求解基础矩阵，然后去掉内参信息就能得到本质矩阵。求解基础矩阵我们一般有以下方法。
-\section{直接线性变换法}
+\subsection{直接线性变换法}
 对于一对匹配点$\boldsymbol{x}_{1}=\left[ u_{1},v_{1},1\right]^{\mathrm{T}}, \boldsymbol{x}_{2}=\left[ u_{2},v_{2},1\right]^{\mathrm{T}}$根据对极约束$\boldsymbol{x}_{2}^{T} \boldsymbol{F x}_{1}=\mathbf{0}$：
 \begin{equation}
 \left( \begin{array}{ccc}{u_{1}} & {v_{1}} & {1}\end{array}\right) \left[ \begin{array}{ccc}{F_{11}} & {F_{12}} & {F_{13}} \\ {F_{21}} & {F_{22}} & {F_{23}} \\ {F_{31}} & {F_{32}} & {F_{33}}\end{array}\right] \left( \begin{array}{l}{u_{2}} \\ {v_{2}} \\ {1}\end{array}\right)=0
@@ -63,8 +64,73 @@ d_{2} \left[\boldsymbol{t}\right]_{\times}\boldsymbol{K}_{2}^{-1} \boldsymbol{x}
 \right\rbrace 
 \end{equation}
 即$\boldsymbol{A}f=0$。
-要保证有唯一解至少需要8对匹配点，当匹配点n=8时，若A非奇异，则有唯一解，称为8点法。若n>8，则可用最小二乘解，也就是$\boldsymbol{A}^T\boldsymbol{A}$的最小特征值对应的特征向量即为最优解。
-\section{RANSAC法}
+要保证有唯一解至少需要8对匹配点，当匹配点n=8时，若A非奇异，则有唯一解，称为8点法\cite{longuet1981computer}。若n>8，则可用最小二乘解，也就是$\boldsymbol{A}^T\boldsymbol{A}$的最小特征值对应的特征向量即为最优解。
+\subsection{RANSAC法}
+RANSAC方法的思想我们在上一章已经介绍过了，应用RANSAC法求解基础矩阵也是有以下几个步骤:
+\begin{enumerate}
+	\item 随机从匹配的点对中选择8个点，使用8点法估算出基础矩阵$F_i$
+	\item 计算其余的点对到其对应对极线的距离$d_n$，如果$d_n≤d$则该点为内点，否则为外点。记下符合该条件的内点的个数为$m_i$
+	\item 迭代k次，或者某次得到内点的数目$m_i$占有的比例大于等于95\%，则停止。选择$m_i$最大的基础矩阵作为最终的结果。
+\end{enumerate}\par
+RANSAC能够不依赖于任何额外信息的情况下，将数据划分为内点和外点。但也有其相应的缺点，RANSAC并不能保证得到正确的结果，需要提高迭代的次数；另一个是，内点外点的判断需要设置阈值。\par
+阈值的大小设置也是有技巧的，对于不同图片大小，需要设置不同的阈值。事实上经过实验，采用归一化平面坐标而不是像素坐标来计算基础矩阵会有较好的结果。
+\section{单应矩阵}
+除了基础矩阵和本质矩阵，还有单应矩阵(Homography)$\boldsymbol{H}$，它主要适用于特征点都位于同一个平面上的情况。比如两个相机都拍摄一面纹理丰富的墙，这就是单应矩阵大展身手的时候。下面我们来大概介绍一下单应矩阵\par
+\begin{figure}[H]
+	\centering
+	\includegraphics[height=5cm]{homography}
+	\caption{单应矩阵条件}
+\end{figure}
+设特征点所在的平面方程为:
+\begin{equation}
+	\boldsymbol{n}^{T} \boldsymbol{P}+d=0 \Rightarrow -\frac{\boldsymbol{n}^{T} \boldsymbol{P}}{d}=1
+\end{equation}
+故:
+\begin{equation}
+\begin{aligned} x_{2} &=K_{2}(R P+t) \\ &=K_{2}\left(R P+t \cdot\left(-\frac{n^{T} P}{d}\right)\right) \\ &=K_{2}\left(R-\frac{t n^{T}}{d}\right) P \\ &=K_{2}\left(R-\frac{t n^{T}}{d}\right) K_{1}^{-1} x_{1} \end{aligned}
+\end{equation}
+故:
+\begin{equation}
+\boldsymbol{x}_{2}=\boldsymbol{H x}_{1}, \quad \boldsymbol{H}=\boldsymbol{K}_{2}\left(\boldsymbol{R}-\frac{\boldsymbol{t} \boldsymbol{n}^{T}}{d}\right) \boldsymbol{K}_{1}^{-1}
+\label{homography}
+\end{equation}
+单应矩阵说明了两个成像平面像素之间的映射关系，从公式\ref{homography}上来看，单应矩阵只和空间平面位置$\boldsymbol{n}$,旋转矩阵R，平移t以及相机内参有关。由于单应矩阵的平面假设，我们常在拍摄对象在平面场景时或者可以假设近似为平面场景时(如无人机俯拍)应用单应矩阵来恢复相机位姿。
+\section{相机姿态的恢复}
+这里介绍一下如何通过本质矩阵$E$来对相机的位姿$R,t$进行恢复。我们主要用到的方法是SVD分解\cite{multiview}。\par
+首先对E进行SVD分解:
+\begin{equation}
+\boldsymbol{E}=\boldsymbol{U} \Sigma \boldsymbol{V}^{T}, \quad \boldsymbol{\Sigma}=\operatorname{diag}(\sigma, \quad \sigma, \quad 0)
+\end{equation}
+此时有两个t和两个R都有可能成立
+\begin{equation}
+\begin{array}{cc}
+{t_{1}=U( :, 2)} & {R_{1}=U R_{Z}\left(\frac{\pi}{2}\right) V^{T}} \\
+{t_{2}=-U( :, 2)} & {R_{2}=U R_{Z}^{T}\left(\frac{\pi}{2}\right) V^{T}}
+\end{array}
+\end{equation}
+其中：
+\begin{equation}
+\boldsymbol{R}_{z}\left(\frac{\pi}{2}\right)=\left( \begin{array}{ccc}{0,} & {-1,} & {0} \\ {1,} & {0,} & {0} \\ {0,} & {0,} & {1}\end{array}\right), \boldsymbol{R}_{z}^{T}\left(\frac{\pi}{2}\right)=\left( \begin{array}{ccc}{0,} & {1} & {0} \\ {-1} & {0,} & {0} \\ {0,} & {0,} & {1}\end{array}\right)
+\end{equation}
+如下图所示，我们得到了四种情况$(t_1,R_1),(t_1,R_2),(t_2,R_1),(t_2,R_2)$。此时，我们只需要验证一下哪一种情况下点P在两个相机的正面。OpenCV已经为我们提供了方便的函数recoverpose()由本质矩阵恢复$R,t$。
+\begin{figure}[H]
+	\centering
+	\includegraphics[height=10cm]{svd}
+	\caption{四种可能的情况}
+\end{figure}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
