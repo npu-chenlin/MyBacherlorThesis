@@ -51,7 +51,7 @@ t_{1}=\left(t_{1}, t_{2}, t_{3}, t_{4}\right)^{\mathrm{T}}, t_{2}=\left(t_{5}, t
 \end{equation}
 当N=6时，恰有解析解。当N>6时，可采用SVD分解来求取超静定方程最小二乘解。\par
 但这样的解法只是假设了十二个未知数，并没有约束。但是R需要是正交矩阵，DLT的结果不一定满足要求，这时我们就需要寻找一个最好的旋转矩阵当做它的近似解。也就是对DLT的结果做QR分解。
-\subsection{非线性优化(BA)}
+\section{非线性优化(BA)介绍}
 除了上面介绍的DLT方法之外，我们还可以把PnP问题构建成一个定义于李代数上的非线性最小二乘问题。前面说的方法基本是先求相机位姿，再求空间点的位置，而BA将其都看成优化变量。也就是说BA过程中相机的位姿和空间点的位置都会同步优化，以求得最符合的结果。我们这里的BA问题是一个最小化重投影误差的过程。\par
 我们设一空间点$P_i$的齐次坐标为$\boldsymbol{P}_i=(X, Y, Z, 1)^{\mathrm{T}}$，其投影的像素坐标是的坐标是$\boldsymbol{u_i}=(u_i, v_i)$,相机内参矩阵为K，位姿的李代数表示为$\xi$(六维向量)。我们可以定义误差函数:
 \begin{equation}
@@ -63,7 +63,7 @@ e(\xi)=u_{i}-\frac{1}{s_{i}} K \exp \left(\xi^{\wedge}\right) P_{i}
 \end{equation}
 这个误差项定义的是十分直观的，它表示用空间点经过位姿变换再经过相机内参投影到像素平面的坐标和原始的像素坐标的二范数。公式中隐含着一些齐次坐标转换不再一一指出。\par
 那么接下来就是要考虑李代数的六个维度，该如何调整才能让误差函数$e(\xi)$达到最小。
-\subsubsection{非线性优化基本思想}
+\subsection{非线性优化基本思想}
 我们先来考虑一个简单的最小二乘问题:
 \begin{equation}
 	\min_{x}\frac{1}{2}\left\|f(\boldsymbol{x})\right\|_{2}^{2}
@@ -82,7 +82,7 @@ e(\xi)=u_{i}-\frac{1}{s_{i}} K \exp \left(\xi^{\wedge}\right) P_{i}
 	\item 否则令$\boldsymbol{x}_{k+1}=\boldsymbol{x}+\Delta \boldsymbol{x}_k$，重复第2步。
 \end{enumerate}
 这个问题的关键是$\Delta \boldsymbol{x}_k$如何确定。下面介绍两种常见的方法。
-\subsubsection{一阶梯度二阶梯度}
+\subsection{一阶梯度二阶梯度}
 我们将目标函数在x附近做泰勒展开:
 \begin{equation}
 \|f(x+\Delta x)\|_{2}^{2} \approx\|f(x)\|_{2}^{2}+\boldsymbol{J}(x) \Delta x
@@ -108,7 +108,7 @@ e(\xi)=u_{i}-\frac{1}{s_{i}} K \exp \left(\xi^{\wedge}\right) P_{i}
 	\caption{红色:牛顿法 绿色:最速下降}
 \end{figure}
 因此可以选用另外两种更实用的方法。
-\subsubsection{高斯牛顿法}
+\subsection{高斯牛顿法}
 高斯牛顿法是最优化算法中比较简单的一类。我们假设目标函数$f(x)$在x处泰勒展开:
 \begin{equation}
 f(\boldsymbol{x}+\Delta \boldsymbol{x}) \approx f(\boldsymbol{x})+\boldsymbol{J}(\boldsymbol{x}) \Delta \boldsymbol{x}
@@ -144,7 +144,7 @@ J(x)^{\mathrm{T}} J(x) \Delta x=-J(x)^{\mathrm{T}} f(x)
 	\item 若$\Delta x$足够小则停止，否则令$\boldsymbol{x}_{k+1}=\boldsymbol{x}+\Delta \boldsymbol{x}_k$，重复第2步。
 \end{enumerate}\par
 对于雅克比矩阵$\boldsymbol{J}(x_k)$和函数$f(x_k)$的求解是十分简单的，只需要带入x值就可以了。而求解$\boldsymbol{H}$是十分困难的。人们曾经一度认为由于求解H的复杂性，这种优化方法不能应用于SLAM系统，但是后来人们认识到了H的稀疏性，才使得求解大规模的增量方程成为可能。这种方法有一个问题，当通过增量方程求解出来的$\Delta x$过大的时候，就不满足泰勒展开的要求，这样一来就不能保证迭代收敛，甚至误差变的更大也有可能。列文伯格-马夸尔特(LM)方法一定程度上修正了这些问题，在SLAM里也广为应用。
-\subsubsection{列文伯格-马夸尔特(LM)法}
+\subsection{列文伯格-马夸尔特(LM)法}
 上一节提到，高斯牛顿法当$\Delta x$过大的时候，可能会出现一些问题，甚至按照这个梯度走下去误差函数反而会增大。由此我们很自然的想到，设置一个信赖区域，当$\Delta x$小于某个值的时候，就认为高斯牛顿法是可靠的，反之则不可靠。我们考虑这样定义信赖区域:
 \begin{equation}
 \rho=\frac{f(\boldsymbol{x}+\Delta \boldsymbol{x})-f(\boldsymbol{x})}{\boldsymbol{J}(\boldsymbol{x}) \Delta \boldsymbol{x}}
@@ -162,6 +162,86 @@ J(x)^{\mathrm{T}} J(x) \Delta x=-J(x)^{\mathrm{T}} f(x)
 (H+\lambda I) \Delta x=g
 \end{equation}
 当参数$\lambda$较小时，$\boldsymbol{H}$占主要地位，此方法更接近高斯牛顿法，当参数$\lambda$较大时，此方法更接近最速下降法。总之，LM方法能够提供更稳定，更准确的$\Delta x$
+\subsection{李代数与BA}
+上一节主要介绍了非线性化的几种方法，下面针对式\ref{equ:ba}来具体分析。\par
+$$loss(\xi)=\arg \min _{\xi} \frac{1}{2} \sum_{i=1}^{n}\left\|e(\xi)\right\|_{2}^{2}$$
+$$e(\xi)=u_{i}-\frac{1}{s_{i}} K \exp \left(\xi^{\wedge}\right) P_{i}$$
+不管是采用高斯牛顿法，还是LM方法，都需要先对目标函数进行线性化:
+\begin{equation}
+e(\xi+\delta \xi) \approx e(\xi)+J \delta \xi
+\end{equation}
+重点在这个一阶导数$\frac{de(\xi)}{\xi}$如何求解。根据链式求导:
+\begin{equation}
+\frac{\partial e}{\partial \xi}=\frac{\partial e}{\partial P^{\prime}} \frac{\partial P^{\prime}}{\partial \xi}
+\end{equation}
+对于$\frac{\partial e}{\partial P^{\prime}}$：
+\begin{equation}
+s u=K P^{\prime}
+\end{equation}
+展开就是:
+\begin{equation}
+\left[ \begin{array}{c}{s u} \\ {s v} \\ {s}\end{array}\right]=\left[ \begin{array}{ccc}{f_{x}} & {0} & {c_{x}} \\ {0} & {f_{y}} & {c_{y}} \\ {0} & {0} & {1}\end{array}\right] \left[ \begin{array}{l}{X^{\prime}} \\ {Y^{\prime}} \\ {Z^{\prime}}\end{array}\right]
+\end{equation}
+消去s，得:
+\begin{equation}
+u=f_{x} \frac{X^{\prime}}{Z^{\prime}}+c_{x}, \quad v=f_{y} \frac{Y^{\prime}}{Z^{\prime}}+c_{y}
+\end{equation}
+故第一项的求导结果:
+\begin{equation}
+\frac{\partial e}{\partial \boldsymbol{P}^{\prime}}=-\left[ \begin{array}{ccc}{\frac{\partial u}{\partial X^{\prime}}} & {\frac{\partial u}{\partial Y^{\prime}}} & {\frac{\partial u}{\partial Z^{\prime}}} \\ {\frac{\partial v}{\partial X^{\prime}}} & {\frac{\partial v}{\partial Y^{\prime}}} & {\frac{\partial v}{\partial Z^{\prime}}}\end{array}\right]=\left[ \begin{array}{ccc}{\frac{f_{\infty}}{Z^{\prime}}} & {0} & {-\frac{f_{z} X^{\prime}}{Z^{\prime 2}}} \\ {0} & {\frac{f_{y}}{Z^{\prime}}} & {-\frac{f_{y} Y^{\prime}}{Z^{\prime 2}}}\end{array}\right]
+\label{equ:epprime}
+\end{equation}
+第二项$\frac{\partial P^{\prime}}{\partial \xi}$可以根据式\ref{equ:raodong}来计算：
+\begin{equation}
+\frac{\partial(\boldsymbol{T} \boldsymbol{P})}{\partial \delta \boldsymbol{\xi}}=(\boldsymbol{T} \boldsymbol{P})^{\odot}=\left[ \begin{array}{cc}{\boldsymbol{I}} & {-\boldsymbol{P}}^{\wedge} \\ {\mathbf{0}^{\mathrm{T}}} & {\mathbf{0}^{\mathrm{T}}}\end{array}\right]
+\end{equation}
+对于3维向量$P^{\prime}$，可得:
+\begin{equation}
+\frac{\partial P^{\prime}}{\partial \xi}=\left[I,-P^{\prime \wedge}\right]
+\end{equation}
+将这两项相乘得到:
+\begin{equation}
+\frac{\partial e}{\partial \delta \xi}=-\left[ \begin{array}{cccccc}{\frac{f_{x}}{Z^{\prime}}} & {0} & {-\frac{f_{x} X^{\prime}}{Z^{\prime 2}}} & {-\frac{f_{x} X^{\prime} Y^{\prime}}{Z^{\prime 2}}} & {f_{x}+\frac{f_{x} X^{2}}{Z^{\prime 2}}} & {-\frac{f_{x} Y^{\prime}}{Z^{\prime}}} \\ {0} & {\frac{f_{y}}{Z^{\prime}}} & {-\frac{f_{y} Y^{\prime}}{Z^{\prime 2}}} & {-f_{y}-\frac{f_{y} Y^{\prime 2}}{Z^{\prime 2}}} & {\frac{f_{y} X^{\prime} Y^{\prime}}{Z^{\prime 2}}} & {\frac{f_{y} X^{\prime}}{Z^{\prime}}}\end{array}\right]
+\end{equation}
+在SLAM过程中，我们不仅想要计算摄像机的位置，有时候还想优化一下特征点P的空间坐标。因此需要讨论一下误差函数关于P的导数，同样是根据链式法则:
+\begin{equation}
+\frac{\partial e}{\partial \boldsymbol{P}}=\frac{\partial \boldsymbol{e}}{\partial \boldsymbol{P}^{\prime}} \frac{\partial \boldsymbol{P}^{\prime}}{\partial \boldsymbol{P}}
+\end{equation}
+对于第一项，式\ref{equ:epprime}已经推导过了，关于第二项:
+\begin{equation}
+P^{\prime}=\exp \left(\xi^{\wedge}\right) P=R P+t
+\end{equation}
+我们发现它关于P的导数就是R，因此:
+\begin{equation}
+\frac{\partial e}{\partial \boldsymbol{P}}=-\left[ \begin{array}{ccc}{\frac{f_{x}}{z^{\prime}}} & {0} & {-\frac{f_{x} x^{\prime}}{Z^{\prime 2}}} \\ {0} & {\frac{f_{y}}{z^{\prime}}} & {-\frac{f_{y} Y^{\prime}}{Z^{\prime 2}}}\end{array}\right] R
+\end{equation}
+\section{g2o框架及其使用}
+g2o(general graph optimization)是优化非线性最小二乘法问题的c++库。作为优化后端能解决包括全局、局部、甚至PnP仿真等各种问题，其性能ceres(另一种非线性优化库)算法相当，使用方便，可以解决非线性度量的一般形式。它通过以下算法来提高运行效率：
+\begin{enumerate}[(1)]
+	\item 采用图的稀疏连接方式。
+	\item 采用特殊的图结构处理问题。
+	\item 用新方法处理离散线性系统。
+	\item 利用现代处理器的SIMD指令系统优化缓存的使用。
+\end{enumerate}
+\par
+除了高效之外，g2o的通用性和扩展性也很好，只需要少量的参数就能实现优化。使用者只需要定义相关的误差函数和点和边等参数就可以了。g2o之所以这么通用是因为它的内部实现了许多求解器，比如上面提到的高斯牛顿法，LM方法。还有丰富的节点、边的类型。除此之外使用者也可以通过自定义节点和边，来实现更多地拓展功能。换句话说，几乎所有图优化问题都可以用去求解，例如BA，PnP，数据拟合等都能胜任。g2o的基本类，结构，表达成图的方法，求解器的选择流程，如下图:\par
+\begin{figure}[H]
+	\centering
+	\includegraphics[height=5cm]{g2o}
+	\caption{g2o类关系}
+\end{figure}
+这里的Vertex指的是待优化变量，Edge指的是误差项。
+在图的上半部分,Sparse Optimizer 不仅是一个 Optimizable Graph 还是一个Hyper Graph。一个 Sparse Optimizer 中包括有多个均继承自 Base Vertex 的节点和多个继承自 Base Unary Edge, Base Binary Edge 或 Base Multi Edge 的边。BaseVertex 和 Base Edge 都是抽象的基类,而定义并运用的节点和边都是基类的派生类。用 Sparse Optimizer .add Vertex 和 Sparse Optimizer .add Edge 给图加入需要的节点和边,最后用 Sparse Optimizer .optimize 实现优化。
+
+
+
+
+\\还需要写一下g2o优化结果
+
+
+
+
+
 
 
 
