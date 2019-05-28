@@ -779,9 +779,6 @@
     \ustc@chapter{摘要}%
   \else
     \chapter{中文内容摘要}%
-    \ifustc@tocloaded\else
-      摘要应置于目录后。\par
-    \fi
   \fi
 }{
   \par\null\par\noindent\hangindent=4\ccwd\relax
