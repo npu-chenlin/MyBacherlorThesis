@@ -1083,14 +1083,7 @@
   \@mainmattertrue
 }
 \newenvironment{acknowledgements}{%
-  \ifustc@graduate
     \chapter{\ustc@acknowledgementsname}%
-  \else
-    \ustc@chapter{\ustc@acknowledgementsname}%
-    \ifustc@tocloaded
-      致谢应置于目录前。\par
-    \fi
-  \fi
 }{}
 \newenvironment{publications}{\chapter{\ustc@publicationsname}}{}
 \newcommand\ustc@atendpackage{\csname ctex_at_end_package:nn\endcsname}
