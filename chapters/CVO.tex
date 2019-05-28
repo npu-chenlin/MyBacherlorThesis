@@ -159,7 +159,8 @@ J(x)^{\mathrm{T}} J(x) \Delta x=-J(x)^{\mathrm{T}} f(x)
 \end{equation}
 这里的$\lambda$是拉格朗日算子，$\boldsymbol{D}$可以看做单位阵$\boldsymbol{I}$，上式对$\Delta x$求导，相当于求解:
 \begin{equation}
-(H+\lambda I) \Delta x=g
+(\boldsymbol{H}+\lambda I) \Delta x=\boldsymbol{g}
+\label{equ:LM}
 \end{equation}
 当参数$\lambda$较小时，$\boldsymbol{H}$占主要地位，此方法更接近高斯牛顿法，当参数$\lambda$较大时，此方法更接近最速下降法。总之，LM方法能够提供更稳定，更准确的$\Delta x$
 \subsection{李代数与BA}
@@ -170,7 +171,7 @@ $$e(\xi)=u_{i}-\frac{1}{s_{i}} K \exp \left(\xi^{\wedge}\right) P_{i}$$
 \begin{equation}
 e(\xi+\delta \xi) \approx e(\xi)+J \delta \xi
 \end{equation}
-重点在这个一阶导数$\frac{de(\xi)}{\xi}$如何求解。根据链式求导:
+重点在这个一阶导数$\frac{\delta e(\xi)}{\delta \xi}$如何求解。根据链式求导:
 \begin{equation}
 \frac{\partial e}{\partial \xi}=\frac{\partial e}{\partial P^{\prime}} \frac{\partial P^{\prime}}{\partial \xi}
 \end{equation}
@@ -188,7 +189,7 @@ u=f_{x} \frac{X^{\prime}}{Z^{\prime}}+c_{x}, \quad v=f_{y} \frac{Y^{\prime}}{Z^{
 \end{equation}
 故第一项的求导结果:
 \begin{equation}
-\frac{\partial e}{\partial \boldsymbol{P}^{\prime}}=-\left[ \begin{array}{ccc}{\frac{\partial u}{\partial X^{\prime}}} & {\frac{\partial u}{\partial Y^{\prime}}} & {\frac{\partial u}{\partial Z^{\prime}}} \\ {\frac{\partial v}{\partial X^{\prime}}} & {\frac{\partial v}{\partial Y^{\prime}}} & {\frac{\partial v}{\partial Z^{\prime}}}\end{array}\right]=\left[ \begin{array}{ccc}{\frac{f_{\infty}}{Z^{\prime}}} & {0} & {-\frac{f_{z} X^{\prime}}{Z^{\prime 2}}} \\ {0} & {\frac{f_{y}}{Z^{\prime}}} & {-\frac{f_{y} Y^{\prime}}{Z^{\prime 2}}}\end{array}\right]
+\frac{\partial e}{\partial \boldsymbol{P}^{\prime}}=-\left[ \begin{array}{ccc}{\frac{\partial u}{\partial X^{\prime}}} & {\frac{\partial u}{\partial Y^{\prime}}} & {\frac{\partial u}{\partial Z^{\prime}}} \\ {\frac{\partial v}{\partial X^{\prime}}} & {\frac{\partial v}{\partial Y^{\prime}}} & {\frac{\partial v}{\partial Z^{\prime}}}\end{array}\right]=\left[ \begin{array}{ccc}{\frac{f_{x}}{Z^{\prime}}} & {0} & {-\frac{f_{z} X^{\prime}}{Z^{\prime 2}}} \\ {0} & {\frac{f_{y}}{Z^{\prime}}} & {-\frac{f_{y} Y^{\prime}}{Z^{\prime 2}}}\end{array}\right]
 \label{equ:epprime}
 \end{equation}
 第二项$\frac{\partial P^{\prime}}{\partial \xi}$可以根据式\ref{equ:raodong}来计算：
@@ -201,11 +202,11 @@ u=f_{x} \frac{X^{\prime}}{Z^{\prime}}+c_{x}, \quad v=f_{y} \frac{Y^{\prime}}{Z^{
 \end{equation}
 将这两项相乘得到:
 \begin{equation}
-\frac{\partial e}{\partial \delta \xi}=-\left[ \begin{array}{cccccc}{\frac{f_{x}}{Z^{\prime}}} & {0} & {-\frac{f_{x} X^{\prime}}{Z^{\prime 2}}} & {-\frac{f_{x} X^{\prime} Y^{\prime}}{Z^{\prime 2}}} & {f_{x}+\frac{f_{x} X^{2}}{Z^{\prime 2}}} & {-\frac{f_{x} Y^{\prime}}{Z^{\prime}}} \\ {0} & {\frac{f_{y}}{Z^{\prime}}} & {-\frac{f_{y} Y^{\prime}}{Z^{\prime 2}}} & {-f_{y}-\frac{f_{y} Y^{\prime 2}}{Z^{\prime 2}}} & {\frac{f_{y} X^{\prime} Y^{\prime}}{Z^{\prime 2}}} & {\frac{f_{y} X^{\prime}}{Z^{\prime}}}\end{array}\right]
+\frac{\partial e}{\partial \delta \xi}=-\left[ \begin{array}{cccccc}{\frac{f_{x}}{Z^{\prime}}} & {0} & {-\frac{f_{x} X^{\prime}}{Z^{\prime 2}}} & {-\frac{f_{x} X^{\prime} Y^{\prime}}{Z^{\prime 2}}} & {f_{x}+\frac{f_{x} X^{\prime 2}}{Z^{\prime 2}}} & {-\frac{f_{x} Y^{\prime}}{Z^{\prime}}} \\ {0} & {\frac{f_{y}}{Z^{\prime}}} & {-\frac{f_{y} Y^{\prime}}{Z^{\prime 2}}} & {-f_{y}-\frac{f_{y} Y^{\prime 2}}{Z^{\prime 2}}} & {\frac{f_{y} X^{\prime} Y^{\prime}}{Z^{\prime 2}}} & {\frac{f_{y} X^{\prime}}{Z^{\prime}}}\end{array}\right]
 \end{equation}
 在SLAM过程中，我们不仅想要计算摄像机的位置，有时候还想优化一下特征点P的空间坐标。因此需要讨论一下误差函数关于P的导数，同样是根据链式法则:
 \begin{equation}
-\frac{\partial e}{\partial \boldsymbol{P}}=\frac{\partial \boldsymbol{e}}{\partial \boldsymbol{P}^{\prime}} \frac{\partial \boldsymbol{P}^{\prime}}{\partial \boldsymbol{P}}
+\frac{\partial \boldsymbol{e}}{\partial \boldsymbol{P}}=\frac{\partial \boldsymbol{e}}{\partial \boldsymbol{P}^{\prime}} \frac{\partial \boldsymbol{P}^{\prime}}{\partial \boldsymbol{P}}
 \end{equation}
 对于第一项，式\ref{equ:epprime}已经推导过了，关于第二项:
 \begin{equation}
@@ -213,8 +214,10 @@ P^{\prime}=\exp \left(\xi^{\wedge}\right) P=R P+t
 \end{equation}
 我们发现它关于P的导数就是R，因此:
 \begin{equation}
-\frac{\partial e}{\partial \boldsymbol{P}}=-\left[ \begin{array}{ccc}{\frac{f_{x}}{z^{\prime}}} & {0} & {-\frac{f_{x} x^{\prime}}{Z^{\prime 2}}} \\ {0} & {\frac{f_{y}}{z^{\prime}}} & {-\frac{f_{y} Y^{\prime}}{Z^{\prime 2}}}\end{array}\right] R
+\frac{\partial e}{\partial \boldsymbol{P}}
+=-\left[ \begin{array}{ccc}{\frac{f_{x}}{Z^{\prime}}} & {0} & {-\frac{f_{x} x^{\prime}}{Z^{\prime 2}}} \\ {0} & {\frac{f_{y}}{Z^{\prime}}} & {-\frac{f_{y} Y^{\prime}}{Z^{\prime 2}}}\end{array}\right] R
 \end{equation}
+至此，我们已经求得$\frac{\delta e(\xi)}{\delta \xi}$与$\frac{\delta e(\xi)}{\delta P}$两个雅克比矩阵的写法，那么根据式\ref{equ:LM}，可通过$J^TJ$来计算海塞矩阵，从而分别计算增量值$\delta \xi$和$\delta P$，进行下一轮的迭代优化。
 \section{g2o框架及其使用}
 g2o(general graph optimization)是优化非线性最小二乘法问题的c++库。作为优化后端能解决包括全局、局部、甚至PnP仿真等各种问题，其性能ceres(另一种非线性优化库)算法相当，使用方便，可以解决非线性度量的一般形式。它通过以下算法来提高运行效率：
 \begin{enumerate}[(1)]
@@ -224,22 +227,51 @@ g2o(general graph optimization)是优化非线性最小二乘法问题的c++库�
 	\item 利用现代处理器的SIMD指令系统优化缓存的使用。
 \end{enumerate}
 \par
-除了高效之外，g2o的通用性和扩展性也很好，只需要少量的参数就能实现优化。使用者只需要定义相关的误差函数和点和边等参数就可以了。g2o之所以这么通用是因为它的内部实现了许多求解器，比如上面提到的高斯牛顿法，LM方法。还有丰富的节点、边的类型。除此之外使用者也可以通过自定义节点和边，来实现更多地拓展功能。换句话说，几乎所有图优化问题都可以用去求解，例如BA，PnP，数据拟合等都能胜任。g2o的基本类，结构，表达成图的方法，求解器的选择流程，如下图:\par
+除了高效之外，g2o的通用性和扩展性也很好，只需要少量的参数就能实现优化。使用者只需要定义相关的误差函数和点和边等参数就可以了。
+g2o之所以这么通用是因为它的内部实现了许多求解器，比如上面提到的高斯牛顿法，LM方法。还有丰富的节点、边的类型。除此之外使用者也可以通过自定义节点和边，来实现更多地拓展功能。换句话说，几乎所有图优化问题都可以用去求解，例如BA，PnP，数据拟合等都能胜任。g2o的基本类，结构，表达成图的方法，求解器的选择流程，如下图:\par
 \begin{figure}[H]
 	\centering
 	\includegraphics[height=5cm]{g2o}
 	\caption{g2o类关系}
 \end{figure}
-这里的Vertex指的是待优化变量，Edge指的是误差项。
-在图的上半部分,Sparse Optimizer 不仅是一个 Optimizable Graph 还是一个Hyper Graph。一个 Sparse Optimizer 中包括有多个均继承自 Base Vertex 的节点和多个继承自 Base Unary Edge, Base Binary Edge 或 Base Multi Edge 的边。BaseVertex 和 Base Edge 都是抽象的基类,而定义并运用的节点和边都是基类的派生类。用 Sparse Optimizer .add Vertex 和 Sparse Optimizer .add Edge 给图加入需要的节点和边,最后用 Sparse Optimizer .optimize 实现优化。
-
-
-
-
-\\还需要写一下g2o优化结果
-
-
-
+在使用g2o时，我们需要以图优化的思想来编写程序。图是由节点和边组成的,这里的Vertex指的是待优化变量，Edge指的是误差项。我们首先以类的形式，定义节点和边。顶点可以继承一个模板类BaseVertex，模板参数为顶点的最小参数个数和顶点的数据类型。重写 virtual void oplusImpl(const double* update) 函数,估计值存储在变量\_estimate中；函数void setToOriginImpl() 将节点的值进行重置。定义节点时，利用setEstimate(type) 函数来设定初始值；setId(int)定义节点编号。\par
+边也是继承一个模板类，模板参数为误差向量e的维度，观测z的数据类型和边连接的顶点类型。这里需要注意的是，几个顶点就是几元边。边也就是上文中的约束关系，一般连接着地图点和位姿。我们需要为边定义误差函数void computeError()。定义雅克比$J_{ij}$ void linearizeOplus() ,观测值存储在\_measurement中，误差存储在\_error中，节点存储在\_vertices[] 。定义边时，利用setId(int) 来定义边的编号（决定了在H矩阵中的位置）；setMeasurement(type) 函数来定义观测值；setVertex(int, vertex) 来定义节点；setInformation() 来定义协方差矩阵的逆。定义完顶点和边后，我们就可以构建这个图，选择优化器并对其优化。\par
+下图展示了使用g2o读取点云数据，并进行优化的结果。
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[ht]{0.4\textwidth}
+		\centering
+		\includegraphics[height=4cm]{g2oresult1}
+		\caption{优化前}
+	\end{subfigure}
+	\quad
+	\begin{subfigure}[ht]{0.4\textwidth}
+		\centering
+		\includegraphics[height=4cm]{g2oresult2}
+		\subcaption{优化后}
+	\end{subfigure}\\
+\end{figure}
+\section{局部地图的跟踪}
+经过上面的讲解，一个简单的视觉里程计可以这样设计:
+\begin{enumerate}
+	\item 对于初始的两张图片进行特征点匹配，计算出本质矩阵或者单应矩阵，从而计算出旋转和平移等信息。固定其平移尺度为1个单位。
+	\item 基于估计的旋转和平移信息，对两张图片的特征点进行三角测量，恢复出这些特征点的三维信息。
+	\item 对于后来的图像，将上一帧和当前帧再进行特征点匹配，然后使用RANSAC PnP初步估计出两帧间的运动信息和新的三维点的信息，将运动信息和三维点信息输入g2o进行优化。
+	\item 对于每一个当前帧，都进行如上操作。每次都计算出当前帧相对于上一帧的位姿变换。
+\end{enumerate}
+\begin{figure}[H]
+	\centering
+	\includegraphics[height=5cm]{v1}
+	\caption{一个简单的VO}
+\end{figure}
+我们可以看到，这样的VO会受两两帧间匹配的局限性影响。一旦视频序列当中某个帧丢失,就会导致后续的帧也无法和上一帧匹配。事实上这样的情况经常出现，一旦匹配出现错误系统很容易崩溃。并且这样的流程会出现累积误差，有一张图估计出现误差那之后会越偏越远。为了弥补这些缺陷，我们可以引入局部地图的概念。\par
+\begin{figure}[H]
+	\centering
+	\includegraphics[height=5cm]{v2}
+	\caption{带有局部地图的VO}
+\end{figure}
+在最开始的VO里,我们只计算相邻帧间的相对位姿。而在使用局部地图的VO里,每个帧为地图贡献一些信息。假如我们现在新添加了一帧，它首先和上一帧进行匹配特征点，然后挑选出来在上一帧中在局部地图里具有对应3D点的特征点，对这些匹配进行3D-2D的PnP处理计算得到当前帧相对于上一帧的位姿变换，由于知道了相对位姿，我们可以对那些在上一帧中没有3D点的匹配点进行三角测量形成新的3D点，并将这些点加入局部地图。最后进行一次BA优化。在这里需要注意的是，BA时局部地图中的3D点会被很多帧观测到，因此在BA的过程中这些观测帧的位姿都会被优化。\par
+这样做的好处是,我们每添加一个地图，不仅能够添加新的三维点，还能修正之前添加的三维点和位姿。我们能够维护一个不断更新的地图。只要地图是正确的,即使中间某帧出了差错,仍有希望求出之后那些帧的正确位置。
 
 
 
