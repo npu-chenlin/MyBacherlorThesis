@@ -8,6 +8,7 @@ SLAM全称同时定位与地图构建，在前面我们一直讨论的是定位�
 	\item 重建：重建地图主要用于展示、通讯、增强现实等，这样的地图要求舒服、美观。这种地图也要求是稠密的，而且对它的外观有一些要求，希望能够构建带有纹理的平面。
 	\item 交互：交互主要指人与地图之间的互动，这要求机器人对地图有更高层面的认知，这种地图也被称为语义地图。
 \end{enumerate}
+\section{三维稠密重建}
 在这里我们简单介绍一种三维重建的方法:PatchMatch\par
 PatchMatch的基本思想是假设图像中相邻的像素区域更可能在同一个平面上。这种算法用近乎随机的方法进行全像素计算得到稠密深度图。PatchMatch算法还设计了一个传播的过程，也就是说如果一个点的深度找的很好，那我们可以做出相邻点的深度和平面和该点差不多的假设。那么即便我们随机初始化深度图，只要有一个找到好，这样好的深度就会扩散开，让所有点受益。
 \begin{figure}[H]
@@ -41,10 +42,34 @@ PatchMatch的基本思想是假设图像中相邻的像素区域更可能在同�
 	\includegraphics[height=4cm]{re2_2}
 	\subcaption{场景b}
 \end{subfigure}
-	\caption{PatchMatch}
+	\caption{PatchMatch稠密重建}
 \end{figure}
-
-
+根据基于PatchMatch的稠密点云重建结果来看，我们通过SLAM提供的相机位姿还是比较准确的。重建结果中平面基本仍旧是平面，一些关键的边缘部分识别情况尚可。但是目前做的PatchMatch只计算了一张图上的像素点，并没有多帧计算相互校验，因此重建结果在边缘部分并不好。之后多帧同时重建效果会更好。\par
+在本机用Svar库统计时间结果如下表:
+\begin{table}[H]
+	\centering
+	\begin{tabular}{cccccc}
+		\toprule
+		FUNCTION             & CALLS & MIN.T   & MEAN.T  & MAX.T   & TOTAL   \\ \midrule
+		RandomInitialization & 1     & 137.2ms & 137.2ms & 137.2ms & 137.2ms \\ \hline
+		ComputeIgnoreMask    & 1     & 16.6ms  & 16.6ms  & 16.6ms  & 16.6ms  \\ \hline
+		PatchMatchIter       & 3     & 2.5 s   & 2.5 s   & 2.6 s   & 7.6 s   \\ \hline
+		computeDepth         & 1     & 7.8 s   & 7.8 s   & 7.8 s   & 7.8 s   \\ \hline
+		computeMaxMindepth   & 896   & 111.0ns & 164.4ns & 1.0us   & 147.3us \\ \hline
+		Total                & 1     &         &         &         & 10.3 s  \\ \bottomrule
+	\end{tabular}
+\end{table}\par
+本机参数情况:\par
+\begin{table}[]
+	\begin{tabular}{ll}
+		操作系统 & Deepin15.10.1,64位  \\
+		CPU  & Inter(R) i7-4720HQ \\
+		主频   & 2.60Hz             \\
+		核数   & 8                  \\
+		RAM  & 8GB               
+	\end{tabular}
+\end{table}
+在选用8张图为辅助计算的时候，全像素计算一张图的深度信息大概需要8秒左右。这个速度相比于目前市面上常见的软件来说表现平平。但是仍然有加速的空间。一方面由于PatchMatch的BrutalForce计算方法跟相邻像素的深度值无关，因此我们可以考虑利用GPU并行计算的特性来对这个计算过程进行加速，让全像素同时进行计算。另一方面我们发现，在实际的三维重建贴图过程中，有用的只是图片的边缘部分，因此我们考虑仅求解图像的轮廓。从全像素求解到仅求解轮廓部分，会让计算像素的数量级大大下降，从而提高了速度。这样下来计算性能应该能提升到每秒数十帧到上百帧的层次。
 
 
 
