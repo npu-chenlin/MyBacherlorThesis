@@ -10,7 +10,30 @@
 再一方面就是效率上的问题，C++中函数的传入需要形参，这会使传入的量执行一次拷贝构造函数，同样的，在函数返回的时候要将返回值先执行一次拷贝构造函数，再把旧返回值析构掉。对于系统内置变量，这样的操作影响不大。但是对于用户自定义的类，特别是包含大量数据(比如图片)的成员变量来说，执行拷贝的代价是不可忍受的。因此我们可以采用const \&的方式来进行引用传递。或者可以让类不保存大型数据的实体，只保存地址以节省空间。在执行拷贝构造函数的时候只付出了拷贝地址的代价而不必拷贝实体。这些都能使程序的运行更加流畅。\par
 SLAM是个增量式系统，图片会源源不断的读进程序中，如何保证程序不因为读入太多图片而导致内存爆炸，还需要及时从内存中释放掉一部分图片，考虑在相机静止不动的时候，由于一直有图片输入，系统就会不断地进行计算。我们肯定不希望整个模型变得越来越大，因此我们提出了关键帧的概念。对于非关键帧来说，它们的加入只是提供地图点然后就可以释放掉地图，而关键帧则需要留给后端做仔细的优化。\par
 总之在实现一个SLAM系统的过程中，需要考虑的零零碎碎的东西非常之多，鉴于毕业设计时间仓促，并没有亲手实现出一整套SLAM系统。但是借助于航空学院赵勇博士的DIYSLAM\cite{zhao2019gslam}优秀的模块化设计，我得以实践SLAM中的很多模块。\par
+\begin{figure}[H]
+	\includegraphics[height=9cm]{liucheng}
+	\caption{SLAM设计流程}
+\end{figure}
 下面就简单介绍一下SLAM的模块以及设计细节
+\section{Svar及其应用}
+Svar\footnote{https://github.com/zdzhaoyong/Svar}是一个致力于将C++变成高性能动态语言中介，类似于Pybind11，但是能提供更多动态语言的接口。本次设计过程我们将利用Svar进行配置文件解析以及全局参数配置的过程。\par
+\begin{table}[]
+	\centering
+	\caption{Svar参数概览}
+	\begin{tabular}{ll}
+		\toprule
+		\textbf{Key}                    & \textbf{Value}                       \\ \midrule
+		FeatureDetector                 & ORB                                  \\ \hline
+		Map                             & Hash                                 \\ \hline
+		Matcher                         & c\_Flann                             \\ \hline
+		Tracker            & opt              \\ \hline
+		Initializer                      & opt\_svd  \\ \hline
+		SLAM.nFeature                   & 1000                                 \\ \hline
+		SLAM.Vocabulary                 & orb\_10\_5\_tfidf\_l1.gbow           \\ \hline
+		Mavic\_Pro\_1280\_720.Paraments & {[}1280 720 1028.8 1028.8 640 360{]}                               \\ \bottomrule
+	\end{tabular}
+\end{table}
+我们在Svar中配置了自己的FeatureDetector，Matcher和Initializer等项，除此之外还设置了相机的内参K,以及词袋模型中预先训练好的词袋等等。
 \section{特征点匹配}
 我们在前面介绍了很多特征点，现在我们就来看一下各种特征点的提取耗时和描述子的计算耗时情况。
 \begin{table}[htbp]
@@ -18,7 +41,7 @@ SLAM是个增量式系统，图片会源源不断的读进程序中，如何保�
 	\caption{特征点提取时间比较}
 	\begin{tabular}{cccc}
 		\toprule
-		& 总耗时(ms) & 特征点数  & 单个特征点提取时间(ms) \\ \midrule
+		类型    & 总耗时(ms) & 特征点数  & 单个特征点提取时间(ms) \\ \midrule
 		FAST   & 46.16   & 70829 & 0.0006        \\ \hline
 		SIFT   & 3599.76 & 23458 & 0.1534        \\ \hline
 		SURF   & 2761.82 & 43029 & 0.0641        \\ \hline
@@ -32,7 +55,7 @@ SLAM是个增量式系统，图片会源源不断的读进程序中，如何保�
 	\caption{描述子计算时间比较}
 	\begin{tabular}{cccc}
 		\toprule
-		& 总耗时(ms) & 特征点数 & 单个特征点描述子计算时间(ms) \\ \midrule
+		类型   & 总耗时(ms) & 特征点数 & 单个特征点描述子计算时间(ms) \\ \midrule
 		SIFT  & 958.15  & 500  & 1.9163           \\ \hline
 		SURF  & 227.97  & 500  & 0.4559           \\ \hline
 		ORB   & 144.90  & 500  & 0.2898           \\ \hline
@@ -64,7 +87,7 @@ SLAM是个增量式系统，图片会源源不断的读进程序中，如何保�
 \item 距离上次全局重定位已超过20帧。
 \item 距离上次插入新关键帧或者停暂停建局部地图已超过20帧。
 \item 当前帧匹配上超过50个特征点。
-\item 当前帧跟踪到的特征点比参考关键帧少90%。
+\item 当前帧跟踪到的特征点比参考关键帧少90\%。
 \end{enumerate}
 \section{局部建图}
 在跟踪后，我们插入了新的关键帧，下面就需要做多余地图点和关键帧的剔除，还有Local BA，下面进行简单介绍：\par
@@ -77,18 +100,13 @@ SLAM是个增量式系统，图片会源源不断的读进程序中，如何保�
 	\item 处理完队列中的关键帧，如果地图中的关键帧大于2，则进行局部BA优化。
 	\item 剔除多余的关键帧。
 \end{enumerate}
-完成上述工作后，关键帧就会被记录到数据库列表中，我们就完成了Mapping的工作。
-
-
-
-
-
-
-
-
-
-
-
+完成上述工作后，关键帧就会被记录到数据库列表中，我们就完成了Mapping的工作。\par
+经过各项函数用时结果参见附录A。
+\begin{figure}
+	\centering
+	\includegraphics[height=10cm]{runtimecapture}
+	\caption{DIYSLAM运行截图}
+\end{figure}
 
 
 

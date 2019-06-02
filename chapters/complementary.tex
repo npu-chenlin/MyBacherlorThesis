@@ -1,0 +1,32 @@
+% !TeX root = ../main.tex
+
+\chapter{DIYSLAM主要函数耗时}
+
+\begin{table}[]
+	\begin{tabular}{lccccc}
+		\toprule
+		FUNCTION                          & \#CALLS & MIN.T   & MEAN.T  & MAX.T   & TOTAL   \\ \midrule
+		Main                              & 1       & 31.8 s  & 31.8 s  & 31.8 s  & 31.8 s  \\ \hline
+		match4initialize                  & 71      & 37.3ms  & 49.2ms  & 92.0ms  & 3.5 s   \\ \hline
+		DIYSLAM::Track                    & 73      & 30.2ms  & 125.5ms & 481.0ms & 9.2s    \\ \hline
+		Tracker::initialize               & 2       & 71.9ms  & 83.7ms  & 95.5ms  & 167.4ms \\ \hline
+		Tracker::trackLastFrame           & 3       & 630.3us & 1.3ms   & 2.0ms   & 4.0ms   \\ \hline
+		Tracker::trackLastFrame::opt      & 1       & 508.8us & 508.8us & 508.8us & 508.8us \\ \hline
+		Tracker::trackLocalMap            & 70      & 1.2ms   & 3.7ms   & 6.3ms   & 262.1ms \\ \hline
+		Tracker::trackRefKeyframeRansac   & 69      & 38.0ms  & 50.3ms  & 93.1ms  & 3.5 s   \\ \hline
+		Tracker::FeatureExtract           & 73      & 30.1ms  & 40.5ms  & 287.7ms & 3.0s     \\ \hline
+		OptimizerG2O::optimize            & 37      & 30.4ms  & 178.4ms & 358.7ms & 6.6s     \\ \hline
+		OptimizerG2O::optimizePnP         & 1       & 425.8us & 425.8us & 425.8us & 425.8us \\ \hline
+		Dataset::grabFrame                & 74      & 300.0ns & 34.0ms  & 266.0ms & 2.5s    \\ \hline
+		Mapper::createNewMapPointsBow     & 36      & 141.9us & 5.1ms   & 84.5ms  & 182.0ms \\ \hline
+		Mapper::dataAssociation           & 36      & 1.4ms   & 4.4ms   & 7.0ms   & 156.8ms \\ \hline
+		Mapper::handleCurrentFrame        & 38      & 25.6us  & 192.5ms & 393.0ms & 7.3s    \\ \hline
+		Mapper::localOptimization         & 37      & 32.7ms  & 187.6ms & 376.5ms & 6.9s    \\ \hline
+		Mapper::mapPointCulling           & 38      & 166.0ns & 96.4us  & 197.1us & 3.7ms   \\ \hline
+		MatcherBoW::findMatchWindow       & 63410   & 193.0ns & 546.8ns & 28.0us  & 34.7ms  \\ \hline
+		MatcherBoW::match4initialize      & 22      & 803.6us & 7.4ms   & 83.9ms  & 163.9ms \\ \hline
+		match4initialize::findFundamental & 71      & 71.2us  & 147.2us & 477.9us & 10.5ms  \\ \hline
+		match4initialize::flann           & 71      & 34.9ms  & 41.0ms  & 51.2ms  & 2.9 s   \\ \hline
+		match4initialize::multiH          & 71      & 699.3us & 8.0ms   & 52.3ms  & 564.6ms \\ \bottomrule
+	\end{tabular}
+\end{table}
