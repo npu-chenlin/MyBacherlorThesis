@@ -2,19 +2,17 @@
 
 \begin{abstract}
 无人飞行器因其体积小，用途广泛，成本低，效费比好，无人员伤亡风险，生存能力强，机动性能好，使用方便等优点，在现代民用方面有广阔的前景，更在现代战争中具有极其重要的作用。目前无人飞行器已广泛运用在航拍，测绘，战场侦查等方面。在未知环境中，无人飞行器往往要求实时获取周围地图信息，同时构建场景地图来满足定位，规避障碍，规划路径和侦查周围环境的要求，而室内环境往往比室外环境更为复杂，具有更加严苛的要求。所以，无人飞行器的定位与周围环境感知在此应用背景下就显得极其重要。\par
-本文主要针对室内场景的定位与场景跟踪进行研究。主要内容是基于 ORB 特征点法的位姿估计研究，基于单目摄像机的三维点云绘制。首先，本文针对适用于室内空间的并行跟踪与地图构建算法进行了详细介绍，并对针孔相机模型进行了系统介绍，简述相机的校正和标定。其次，对图像的处理有了详细的介绍，例如特征点提取，前端设计，后端优化，回环检测等。\par
-最后，我们对提取的前面提取的关键帧和地图点绘制在地图中，实现了一个视觉 SLAM 系统。
-\keywords{SLAM；特征点；对极几何；非线性优化；词袋模型；RANSAC}
+本文通过SLAM过程来对机器人进行定位，并根据定位结果进行三维稠密重建周围环境场景。主要内容是基于ORB特征点法的位姿估计研究，基于块匹配的三维点云绘制。\par
+首先，本文对SLAM现状进行介绍，然后针对SLAM过程中几个重要的特征点进行了介绍，比如特征点提取，前端设计，后端优化，回环检测等。同时对对极几何，李代数，针孔相机等数学模型进行了系统介绍。\par
+最后我们设计实现了一个基于块匹配的三维重建算法，利用SLAM过程得到的位姿和特征点重建出了单张照片的深度，取得了不错的效果。\par
+\keywords{SLAM；特征点；对极几何；非线性优化；词袋模型；三维稠密重建}
 \end{abstract}
 
 \begin{enabstract}
 Unmanned aerial vehicle (UAV), with its small size, wide use, low cost, good efficiency and cost ratio, no casualty risk, strong survivability, good maneuverability, easy to use and so on, has a broad prospect in modern civil field, and has an extremely important role in modern war. At present, UAV has been widely used in aerial photography, surveying and mapping, battlefield detection and so on. In the unknown environment, unmanned aerial vehicles often require real-time access to the surrounding map information, at the same time building a scene map to meet the location, avoid obstacles, plan the path and investigate the surrounding environment requirements, and indoor environment is often more complex than the outdoor environment, with more stringent requirements.
 \par
-Therefore, positioning and environment awareness of UAV is very important in this application context. This paper mainly focuses on indoor scene location and scene tracking. The main content is the pose estimation based on the ORB feature point method, and the 3D point cloud rendering based on monocular camera.
-\par
-First of all, this paper introduces the parallel tracking and map building algorithm suitable for indoor space, and introduces the pinhole camera model, and describes the calibration and calibration of the camera.
-\par
-Secondly, image processing is introduced in detail, such as feature points extraction, front-end design, back-end optimization, loopback detection and so on.
-\par
-Finally, we draw a map of the extracted key frames and map points in the map and implement a visual SLAM system.\par  \enkeywords{SLAM; Key Points; Epipolar Geometry; Nonlinear Optimization; Bag-of-Word; RANSAC}
+In this paper, the SLAM process is used to locate the robot, and three-dimensional dense reconstruction of the surrounding environment scene is carried out according to the location results. The main content is the research of pose estimation based on ORB method, and the rendering of three-dimensional point cloud based on block matching. \par
+Firstly, this paper introduces the current situation of SLAM, and then introduces several important keypoints in SLAM process, such as keypoint extraction, front-end design, back-end optimization, loop detection and so on. At the same time, the mathematical models of polar geometry, Lie algebra and pinhole camera are systematically introduced.\par
+Finally, we design and implement a three-dimensional reconstruction algorithm based on block matching, and reconstruct the depth of a single photograph by using the pose and feature obtained from SLAM process, which achieves good results.\par
+\enkeywords{SLAM; Key Points; Epipolar Geometry; Nonlinear Optimization; Bag-of-Word; Dense reconstruction}
 \end{enabstract}
