@@ -764,7 +764,7 @@
   \fi
 \fi
 \NewDocumentCommand\ustc@chapter{o m}{%
-  \if@openright\cleardoublepage\else\clearpage\fi
+  \cleardoublepage
   \IfValueTF{#1}{%
     \ustc@pdfbookmark{#1}%
     \chaptermark{#1}%
@@ -830,7 +830,7 @@
   \g@addto@macro\appendix{\ustc@addtocspacefalse}%
 \fi
 \renewcommand\chapter{%
-  \if@openright\cleardoublepage\else\clearpage\fi
+  \cleardoublepage
   \thispagestyle{\CTEX@chapter@pagestyle}%
   \global\@topnum\z@
   \@afterindenttrue
